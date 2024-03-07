@@ -17,10 +17,19 @@ class UserController {
     private lateinit var userService: UserService
 
     @PostMapping
-    fun createUser(@RequestBody user: User): ResponseEntity<*> {
+    fun createUser(@RequestBody userDto: UserDto): ResponseEntity<*> {
+
         return try {
-            userService.create(user)
-            status(CREATED).build<Any>()
+            val createUserResult = userService.create(userDto.toDomain())
+            if (createUserResult.isSuccess()) {
+                return status(CREATED).build<Any>()
+            }
+            return when (createUserResult.error) {
+                is UserAlreadyExistsError -> status(BAD_REQUEST).body("User already exists.")
+                is TooManyAdminsError -> status(BAD_REQUEST).body("Too many admins.")
+                else -> status(INTERNAL_SERVER_ERROR).body("Something went wrong.")
+            }
+
         } catch (exception: UserAlreadyExistsException) {
             status(BAD_REQUEST).body("User already exists.")
         } catch (exception: EmptyDataNotAllowedException) {
@@ -32,5 +41,9 @@ class UserController {
         } catch (exception: CannotCreateUserException) {
             status(INTERNAL_SERVER_ERROR).body("Cannot create user.")
         }
+    }
+
+    private fun UserDto.toDomain(): User {
+        return User.from(this.username, this.password, this.role)
     }
 }

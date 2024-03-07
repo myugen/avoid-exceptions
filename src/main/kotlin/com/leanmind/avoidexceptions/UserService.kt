@@ -5,24 +5,23 @@ import org.springframework.stereotype.Service
 import java.util.logging.Level
 import java.util.logging.Logger
 
+private const val MAX_NUMBER_OF_ADMINS = 2
+
 @Service
 class UserService(private val userRepository: UserRepository) {
     val logger: Logger = Logger.getLogger(UserService::class.java.name)
 
-    fun create(user: User) {
+    fun create(user: User): CreateUserResult {
         try {
-            if (userRepository.findByUsername(user.username) != null) {
-                throw UserAlreadyExistsException()
+            if (userRepository.exists(user)) {
+                return CreateUserResult.userAlreadyExistsError()
             }
-            if (user.role == ADMIN) {
-                userRepository.countOfAdmins().let { admins ->
-                    if (admins >= 2) {
-                        throw TooManyAdminsException()
-                    }
-                }
+            if (user.isAdmin() && cannotExistsMoreAdmins()) {
+                return CreateUserResult.tooManyAdminsError()
             }
             userRepository.save(user)
             logger.log(Level.INFO, "User created.")
+            return CreateUserResult.success()
         } catch (exception: UserAlreadyExistsException) {
             logger.log(Level.WARNING, "User already exists.", exception)
             throw exception
@@ -34,4 +33,6 @@ class UserService(private val userRepository: UserRepository) {
             throw CannotCreateUserException(exception)
         }
     }
+
+    private fun cannotExistsMoreAdmins() = userRepository.countOfAdmins() >= MAX_NUMBER_OF_ADMINS
 }
