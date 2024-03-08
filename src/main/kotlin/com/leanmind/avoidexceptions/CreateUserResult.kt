@@ -1,27 +1,17 @@
 package com.leanmind.avoidexceptions
 
-open class Error
-class UserAlreadyExistsError : Error()
-class TooManyAdminsError : Error()
-
-class CreateUserResult private constructor(
-        val error: Error?,
-) {
+class CreateUserResult private constructor(val error: Error?) {
     fun isSuccess(): Boolean {
         return error === null
     }
 
     companion object {
-        fun success(): CreateUserResult {
-            return CreateUserResult(null)
-        }
+        fun success(): CreateUserResult = CreateUserResult(null)
 
-        fun userAlreadyExistsError(): CreateUserResult {
-            return CreateUserResult(UserAlreadyExistsError())
-        }
+        fun userAlreadyExistsError(): CreateUserResult = CreateUserResult(Error.UserAlreadyExists)
 
-        fun tooManyAdminsError(): CreateUserResult {
-            return CreateUserResult(TooManyAdminsError())
-        }
+        fun tooManyAdminsError(): CreateUserResult = CreateUserResult(Error.TooManyAdmins)
+
+        fun cannotCreateUserError(): CreateUserResult = CreateUserResult(Error.CannotCreateUser)
     }
 }

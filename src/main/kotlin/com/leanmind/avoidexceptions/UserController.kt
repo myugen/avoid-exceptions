@@ -1,7 +1,9 @@
 package com.leanmind.avoidexceptions
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus.*
+import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.CREATED
+import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.status
 import org.springframework.web.bind.annotation.PostMapping
@@ -18,28 +20,12 @@ class UserController {
 
     @PostMapping
     fun createUser(@RequestBody userDto: UserDto): ResponseEntity<*> {
-
-        return try {
-            val createUserResult = userService.create(userDto.toDomain())
-            if (createUserResult.isSuccess()) {
-                return status(CREATED).build<Any>()
-            }
-            return when (createUserResult.error) {
-                is UserAlreadyExistsError -> status(BAD_REQUEST).body("User already exists.")
-                is TooManyAdminsError -> status(BAD_REQUEST).body("Too many admins.")
-                else -> status(INTERNAL_SERVER_ERROR).body("Something went wrong.")
-            }
-
-        } catch (exception: UserAlreadyExistsException) {
-            status(BAD_REQUEST).body("User already exists.")
-        } catch (exception: EmptyDataNotAllowedException) {
-            status(BAD_REQUEST).body("User data is invalid.")
-        } catch (exception: PasswordTooShortException) {
-            status(BAD_REQUEST).body("Password is too short.")
-        } catch (exception: TooManyAdminsException) {
-            status(BAD_REQUEST).body("Too many admins.")
-        } catch (exception: CannotCreateUserException) {
-            status(INTERNAL_SERVER_ERROR).body("Cannot create user.")
+        val createUserResult = userService.create(userDto.toDomain())
+        return when (createUserResult.error) {
+            Error.UserAlreadyExists -> status(BAD_REQUEST).body("User already exists.")
+            Error.TooManyAdmins -> status(BAD_REQUEST).body("Too many admins.")
+            Error.CannotCreateUser -> status(INTERNAL_SERVER_ERROR).body("Cannot create user.")
+            null -> status(CREATED).build<Unit>()
         }
     }
 

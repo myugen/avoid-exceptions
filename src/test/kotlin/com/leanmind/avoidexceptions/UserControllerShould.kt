@@ -55,7 +55,7 @@ class UserControllerShould {
     @Test
     fun `respond bad request when user already exists`() {
         val user = User.from("existingUser", "password", UserRole.STANDARD)
-        `when`(userService.create(user)).thenThrow(UserAlreadyExistsException())
+        `when`(userService.create(user)).thenReturn(CreateUserResult.userAlreadyExistsError())
 
         mockMvc.perform(
             post("/users")
@@ -67,7 +67,7 @@ class UserControllerShould {
     @Test
     fun `respond bad request when max number of admins is reached`() {
         val user = User.from("username", "password", UserRole.ADMIN)
-        `when`(userService.create(user)).thenThrow(TooManyAdminsException())
+        `when`(userService.create(user)).thenReturn(CreateUserResult.tooManyAdminsError())
 
         mockMvc.perform(
             post("/users")
@@ -79,7 +79,7 @@ class UserControllerShould {
     @Test
     fun `respond internal server error when something fails creating the user`() {
         val user = User.from("username", "password", UserRole.STANDARD)
-        `when`(userService.create(user)).thenThrow(CannotCreateUserException(RuntimeException()))
+        `when`(userService.create(user)).thenReturn(CreateUserResult.cannotCreateUserError())
 
         mockMvc.perform(
             post("/users")
@@ -89,11 +89,11 @@ class UserControllerShould {
     }
 
     private fun buildRequestBodyFrom(
-            username: String,
-            password: String,
-            role: String
+        username: String,
+        password: String,
+        role: String
     ) =
-            """
+        """
             {
                 "username": "$username",
                 "password": "$password",

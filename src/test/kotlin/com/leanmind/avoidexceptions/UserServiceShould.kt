@@ -42,7 +42,7 @@ class UserServiceShould {
         val createUserResult = userService.create(user)
 
         assertThat(createUserResult.isSuccess()).isFalse()
-        assertThat(createUserResult.error).isInstanceOf(UserAlreadyExistsError::class.java)
+        assertThat(createUserResult.error).isInstanceOf(Error.UserAlreadyExists::class.java)
     }
 
     @Test
@@ -65,6 +65,6 @@ class UserServiceShould {
         val createUserResult = userService.create(user)
 
         assertThat(createUserResult.isSuccess()).isFalse()
-        assertThat(createUserResult.error).isInstanceOf(TooManyAdminsError::class.java)
+        assertThat(createUserResult.error).isInstanceOf(Error.TooManyAdmins::class.java)
     }
 }
